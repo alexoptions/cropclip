@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <title>CropClip Studio — Screen Crop & Audio Recorder</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+          <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
+          <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">CropClip Studio</span>
+        <span class="brand-subtitle">Screen Region &amp; System Audio Recorder</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="selectScreenBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>1. Select Screen / Tab</span>
+      </button>
+
+      <span id="audioBadge" class="audio-pill">🔇 No Audio Shared</span>
+
+      <div class="divider"></div>
+
+      <select id="fpsSelect" title="Recording Frame Rate">
+        <option value="30" selected>30 FPS</option>
+        <option value="60">60 FPS</option>
+      </select>
+
+      <button id="recordBtn" class="btn-record" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+          <circle cx="12" cy="12" r="8"></circle>
+        </svg>
+        <span>Start Recording</span>
+      </button>
+
+      <button id="stopBtn" class="btn-stop" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+          <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+        </svg>
+        <span>Stop Recording</span>
+      </button>
+
+      <div id="recStatus" class="rec-status">
+        <span class="pulse-dot"></span>
+        <span id="timerText">00:00 (0f)</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Card: Interactive Crop Stage -->
+    <section class="card">
+      <div class="card-header">
+        <div class="header-title">
+          <span>Live Source &amp; Crop Region</span>
+        </div>
+
+        <div class="preset-bar">
+          <button class="preset-btn active" data-ratio="free" disabled>Free</button>
+          <button class="preset-btn" data-ratio="16:9" disabled>16:9</button>
+          <button class="preset-btn" data-ratio="9:16" disabled>9:16</button>
+          <button class="preset-btn" data-ratio="1:1" disabled>1:1</button>
+          <button class="preset-btn" data-ratio="full" disabled>Full</button>
+        </div>
+      </div>
+
+      <div class="stage-container" id="stageContainer">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <path d="M8 21h8"></path>
+              <path d="M12 17v4"></path>
+            </svg>
+          </div>
+          <h3>Ready to Capture Your Screen</h3>
+          <p>Click <strong>"1. Select Screen / Tab"</strong> in the top bar to choose what you want to record and crop.</p>
+          <div class="empty-tip">
+            💡 <strong>Want to record computer sound?</strong><br>
+            Remember to enable <strong>"Also share tab audio"</strong> or <strong>"Also share system audio"</strong> in the browser prompt!
+          </div>
+        </div>
+
+        <div id="videoWrapper">
+          <video id="sourceVideo" autoplay muted playsinline></video>
+          <div id="cropBox">
+            <div class="crop-badge" id="cropBadge">0 × 0</div>
+            <div class="handle nw" data-dir="nw"></div>
+            <div class="handle n" data-dir="n"></div>
+            <div class="handle ne" data-dir="ne"></div>
+            <div class="handle e" data-dir="e"></div>
+            <div class="handle se" data-dir="se"></div>
+            <div class="handle s" data-dir="s"></div>
+            <div class="handle sw" data-dir="sw"></div>
+            <div class="handle w" data-dir="w"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-footer">
+        <span id="stageHint">Select a screen or tab to begin</span>
+        <span id="sourceResText">Source: —</span>
+      </div>
+    </section>
+
+    <!-- Right Card: Output Preview & Download -->
+    <section class="card">
+      <div class="card-header">
+        <div class="header-title">
+          <span>Recorded Clip</span>
+        </div>
+        <span id="formatBadge" class="format-tag">NATIVE MP4</span>
+      </div>
+
+      <div class="preview-body">
+        <div class="video-slot">
+          <div class="preview-empty" id="previewPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="32" height="32" style="margin-bottom:8px; opacity:0.6;">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <div>Your recorded clip (with audio) will appear here for instant review as soon as you stop recording.</div>
+          </div>
+          <video id="recordedVideo" controls playsinline></video>
+        </div>
+
+        <div class="meta-list">
+          <div class="meta-row">
+            <span>Crop Resolution</span>
+            <strong id="metaRes">—</strong>
+          </div>
+          <div class="meta-row">
+            <span>Audio Track</span>
+            <strong id="metaAudio">—</strong>
+          </div>
+          <div class="meta-row">
+            <span>Duration &amp; Size</span>
+            <strong id="metaSize">—</strong>
+          </div>
+          <div class="meta-row">
+            <span>Captured Frames</span>
+            <strong id="metaFrames">0</strong>
+          </div>
+        </div>
+
+        <div class="export-actions">
+          <button id="downloadBtn" class="btn-primary" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span id="downloadBtnText">Download Video (.MP4)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
